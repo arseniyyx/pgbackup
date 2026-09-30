@@ -1,0 +1,20 @@
+# Copy to pgbackup.yml and edit. The DSN can also come from PGBACKUP_DSN or
+# DATABASE_URL, which override whatever is set here.
+dsn: postgresql://user:password@localhost:5432/mydb
+
+# Where dumps land when no S3 block is present.
+backup_dir: backups
+
+# Parallel workers for pg_dump/pg_restore of the custom-format archive.
+jobs: 2
+
+retention:
+  keep_days: 7   # keep everything newer than this many days
+  keep_last: 5   # always keep at least this many most-recent backups
+
+# Optional. With this block, backups are stored in S3 instead of backup_dir.
+# s3:
+#   bucket: my-backups
+#   prefix: pgbackup
+#   region: eu-central-1
+#   endpoint_url: https://s3.eu-central-1.amazonaws.com  # set for MinIO/other S3-compatible

@@ -1,0 +1,26 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: demo
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  pgbackup:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGBACKUP_DSN: postgresql://postgres:postgres@postgres:5432/demo
+      PGBACKUP_BACKUP_DIR: /data
+    volumes:
+      - backups:/data
+    command: ["backup"]
+
+volumes:
+  backups:

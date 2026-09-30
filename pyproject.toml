@@ -1,0 +1,34 @@
+[project]
+name = "pgbackup"
+version = "0.1.0"
+description = "Scheduled PostgreSQL backups with retention, S3 upload, restore and verification"
+requires-python = ">=3.11"
+dependencies = [
+    "boto3>=1.34",
+    "pydantic>=2.8",
+    "pyyaml>=6.0",
+]
+
+[project.scripts]
+pgbackup = "pgbackup.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "moto[s3]>=5.0",
+    "ruff>=0.6",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
