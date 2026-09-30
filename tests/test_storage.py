@@ -55,3 +55,19 @@ def test_s3_roundtrip(tmp_path):
 
     storage.delete("x.dump")
     assert storage.list_keys() == []
+
+
+@mock_aws
+def test_s3_list_ignores_sibling_prefixes(tmp_path):
+    bucket = "pgbackup-test-bucket"
+    client = boto3.client("s3", region_name="us-east-1")
+    client.create_bucket(Bucket=bucket)
+    storage = S3Storage(S3Config(bucket=bucket, prefix="pgbackup", region="us-east-1"))
+
+    src = tmp_path / "f.json"
+    src.write_text("{}")
+    storage.put(str(src), "real.json")
+    client.put_object(Bucket=bucket, Key="pgbackup-archive/foreign.json", Body=b"{}")
+    client.put_object(Bucket=bucket, Key="pgbackupNOTES.json", Body=b"{}")
+
+    assert storage.list_keys(suffix=".json") == ["real.json"]

@@ -19,6 +19,11 @@ def test_missing_dsn_raises(monkeypatch):
         Config.load(None)
 
 
+def test_non_url_dsn_is_rejected():
+    with pytest.raises(ValueError, match="must be a URL"):
+        Config(dsn="host=localhost dbname=app user=svc")
+
+
 def test_file_config_with_s3(tmp_path, monkeypatch):
     monkeypatch.delenv("PGBACKUP_DSN", raising=False)
     monkeypatch.delenv("DATABASE_URL", raising=False)

@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class RetentionConfig(BaseModel):
@@ -26,6 +26,13 @@ class Config(BaseModel):
     jobs: int = Field(default=2, ge=1, le=32)
     retention: RetentionConfig = RetentionConfig()
     s3: S3Config | None = None
+
+    @field_validator("dsn")
+    @classmethod
+    def _dsn_must_be_url(cls, value: str) -> str:
+        if not value.startswith(("postgres://", "postgresql://")):
+            raise ValueError("dsn must be a URL like postgresql://user:pass@host:5432/dbname")
+        return value
 
     @classmethod
     def load(cls, path: str | None) -> Config:

@@ -58,7 +58,11 @@ class BackupService:
             meta_path = str(Path(tmp) / meta.meta_filename)
             Path(meta_path).write_text(meta.model_dump_json(indent=2))
             self.storage.put(dump_path, meta.filename)
-            self.storage.put(meta_path, meta.meta_filename)
+            try:
+                self.storage.put(meta_path, meta.meta_filename)
+            except Exception:
+                self.storage.delete(meta.filename)
+                raise
         return meta
 
     def list(self) -> list[BackupMeta]:
@@ -115,10 +119,12 @@ class BackupService:
 
     def prune(self, now: datetime | None = None) -> list[str]:
         now = now or datetime.now(UTC)
+        r = self.cfg.retention
+        if r.keep_last <= 0 and r.keep_days <= 0:
+            return []
+
         metas = self.list()
         keep: set[str] = set()
-
-        r = self.cfg.retention
         if r.keep_last > 0:
             for m in metas[-r.keep_last :]:
                 keep.add(m.name)
@@ -131,7 +137,7 @@ class BackupService:
         removed: list[str] = []
         for m in metas:
             if m.name not in keep:
-                self.storage.delete(m.filename)
                 self.storage.delete(m.meta_filename)
+                self.storage.delete(m.filename)
                 removed.append(m.name)
         return removed

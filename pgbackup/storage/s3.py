@@ -22,10 +22,11 @@ class S3Storage:
 
     def list_keys(self, suffix: str = "") -> list[str]:
         prefix = self.cfg.prefix.strip("/")
+        list_prefix = f"{prefix}/" if prefix else ""
         token = None
         keys: list[str] = []
         while True:
-            kwargs = {"Bucket": self.cfg.bucket, "Prefix": prefix}
+            kwargs = {"Bucket": self.cfg.bucket, "Prefix": list_prefix}
             if token:
                 kwargs["ContinuationToken"] = token
             resp = self.client.list_objects_v2(**kwargs)

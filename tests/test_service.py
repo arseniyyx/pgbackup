@@ -100,3 +100,18 @@ def test_prune_keeps_last_n(dsn, tmp_path):
     removed = BackupService(config).prune(now=now)
     assert set(removed) == {"b2", "b3", "b4"}
     assert {m.name for m in BackupService(config).list()} == {"b0", "b1"}
+
+
+def test_prune_with_no_rule_keeps_everything(dsn, tmp_path):
+    now = datetime(2026, 1, 10, tzinfo=UTC)
+    config = Config(
+        dsn=dsn,
+        backup_dir=tmp_path / "b",
+        retention=RetentionConfig(keep_days=0, keep_last=0),
+    )
+    _place(config, "ancient", now - timedelta(days=365))
+    _place(config, "recent", now - timedelta(days=1))
+
+    removed = BackupService(config).prune(now=now)
+    assert removed == []
+    assert {m.name for m in BackupService(config).list()} == {"ancient", "recent"}

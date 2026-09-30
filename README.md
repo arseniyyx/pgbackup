@@ -57,7 +57,8 @@ S3 backend uses the normal AWS credential chain (env vars, `~/.aws`, instance ro
 `endpoint_url` lets you point it at MinIO or another S3-compatible store.
 
 Retention keeps a backup if it is newer than `keep_days` **or** among the last `keep_last`.
-Set either to `0` to turn that rule off.
+Set either to `0` to turn that rule off; with both off, `prune` keeps everything rather than
+deleting it.
 
 ## How it works
 
@@ -69,6 +70,10 @@ name is `<database>-<UTC timestamp>`.
 doesn't match what was recorded. `verify` then restores into a fresh `pgbackup_verify_*`
 database and drops it in a `finally` block, so a failure part-way through doesn't leave the
 scratch database behind.
+
+The password is taken out of the DSN and handed to `pg_dump`/`pg_restore`/`psql` through the
+`PGPASSWORD` environment variable instead of the command line, so it doesn't show up in `ps`
+or `/proc` while a backup runs.
 
 The storage backend is a small `Protocol` with `put`/`get`/`list_keys`/`delete`, so local disk
 and S3 are interchangeable and a new backend (GCS, Azure) is one class.
